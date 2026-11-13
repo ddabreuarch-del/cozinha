@@ -24,7 +24,7 @@ html, body { height: 100%; overflow: hidden; background: #0a0f1a; color: #fff;
 .slide { position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0; -webkit-transition: opacity 1.2s ease; transition: opacity 1.2s ease;
   background-size: cover; background-position: center; }
 .slide.on { opacity: 1; }
-.slide .emoji { position: absolute; right: -14px; top: 26%; font-size: 150px; line-height: 1; -webkit-transform: rotate(-12deg); transform: rotate(-12deg); }
+.slide .emoji { position: absolute; right: 10px; top: 30%; font-size: 120px; line-height: 1; }
 .slide .shade { position: absolute; left: 0; right: 0; bottom: 0; height: 60%;
   background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.85) 100%); }
 .slide .info { position: absolute; left: 20px; right: 20px; bottom: 30px; }
@@ -952,6 +952,16 @@ function tick() {
   timerTick();
 }
 
+/* Atualização automática: recarrega quando o GitHub publica uma versão nova */
+var currentVersion = null;
+function checkVersion() {
+  xhrGet('version.json?t=' + Date.now(), function (v) {
+    if (!v || !v.v) return;
+    if (currentVersion === null) { currentVersion = v.v; return; }
+    if (v.v !== currentVersion && T.state === 'idle' && !modalOpen) location.reload(true);
+  }, function () {});
+}
+
 function fitHeight() { $('app').style.height = window.innerHeight + 'px'; }
 
 function init() {
@@ -976,6 +986,8 @@ function init() {
   if (cached) { try { renderWeather(JSON.parse(cached)); } catch (e) {} }
   loadWeather();
   setInterval(loadWeather, CONFIG.atualizarTempoMinutos * 60000);
+  checkVersion();
+  setInterval(checkVersion, 10 * 60000);
 }
 
 init();
