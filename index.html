@@ -103,9 +103,10 @@ html, body { height: 100%; overflow: hidden; background: #0a0f1a; color: #fff;
 .w-upd { position: absolute; right: 16px; top: 17px; font-size: 10px; opacity: .65; }
 
 .timer { -webkit-flex: 1; flex: 1; background: #1b2232; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; }
-.t-grid { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; margin: 8px -4px 0; -webkit-flex: 1; flex: 1; }
-.t-btn { width: 25%; height: 50%; padding: 4px; }
-.t-btn div { background: #2b3550; border-radius: 12px; height: 100%; display: -webkit-flex; display: flex;
+.t-grid { display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; margin: 8px -4px 0; -webkit-flex: 1; flex: 1; }
+.t-row { -webkit-flex: 1; flex: 1; display: -webkit-flex; display: flex; }
+.t-btn { -webkit-flex: 1; flex: 1; padding: 4px; display: -webkit-flex; display: flex; }
+.t-btn div { -webkit-flex: 1; flex: 1; background: #2b3550; border-radius: 12px; display: -webkit-flex; display: flex;
   -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; font-size: 15px; font-weight: 600; white-space: nowrap; }
 .t-run { -webkit-flex: 1; flex: 1; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; -webkit-justify-content: center; justify-content: center; }
 #tLeft { font-size: 56px; font-weight: 300; text-align: center; letter-spacing: -1px; }
@@ -774,9 +775,10 @@ function loadWeather() {
     '&current=temperature_2m,weather_code,is_day' +
     '&hourly=temperature_2m,weather_code,precipitation_probability' +
     '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
-    '&timezone=America%2FSao_Paulo&forecast_days=2';
+    '&timezone=America%2FSao_Paulo&forecast_days=3';
   function ok(d) {
-    d._upd = hhmm(new Date());
+    if (!d || !d.hourly) { fail(); return; }
+    d._upd = (d.current && d.current.time) ? d.current.time.substr(11, 5) : hhmm(new Date());
     lsSet('cozinha-weather', JSON.stringify(d));
     renderWeather(d);
   }
@@ -785,21 +787,25 @@ function loadWeather() {
     if (cached) { try { renderWeather(JSON.parse(cached)); return; } catch (e) {} }
     $('weather').innerHTML = '<div class="label">Tempo</div><div class="w-desc" style="margin-top:20px">Previsão indisponível.<br>Verifique o Wi-Fi.</div>';
   }
-  xhrGet('https' + q, ok, function () {
-    if (location.protocol === 'http:') xhrGet('http' + q, ok, fail); else fail();
+  xhrGet('weather.json?t=' + Date.now(), ok, function () {
+    xhrGet('https' + q, ok, fail);
   });
 }
 
 function renderWeather(d) {
-  var c = d.current, now = new Date(), night = c.is_day === 0, info = wInfo(c.weather_code, night);
-  var t = Math.round(c.temperature_2m), dl = d.daily, html = '', i, j, hr, hi, idx = -1;
+  var now = new Date(), dl = d.daily, html = '', i, j, hr, hi, idx = -1, di = 0, code, t, night, info;
   var nowStr = dayKey(now) + 'T' + pad(now.getHours()) + ':00';
   for (i = 0; i < d.hourly.time.length; i++) if (d.hourly.time[i] === nowStr) { idx = i; break; }
+  if (dl.time) for (i = 0; i < dl.time.length; i++) if (dl.time[i] === dayKey(now)) { di = i; break; }
+  /* usa a previsão da hora atual (funciona mesmo se o arquivo tiver algumas horas) */
+  if (idx >= 0) { t = Math.round(d.hourly.temperature_2m[idx]); code = d.hourly.weather_code[idx]; night = now.getHours() < 6 || now.getHours() >= 18; }
+  else { t = Math.round(d.current.temperature_2m); code = d.current.weather_code; night = d.current.is_day === 0; }
+  info = wInfo(code, night);
 
-  html += '<div class="label">' + esc(CONFIG.cidade) + '</div><div class="w-upd">' + (d._upd ? 'atualizado ' + d._upd : '') + '</div>';
+  html += '<div class="label">' + esc(CONFIG.cidade) + '</div><div class="w-upd">' + (d._upd ? 'dados das ' + d._upd : '') + '</div>';
   html += '<div class="w-main"><div class="w-ico">' + info[0] + '</div><div class="w-temp">' + t + '°</div></div>';
   html += '<div class="w-desc">' + info[1] + '</div>';
-  html += '<div class="w-mm">Máx ' + Math.round(dl.temperature_2m_max[0]) + '° · Mín ' + Math.round(dl.temperature_2m_min[0]) + '° · Chuva ' + dl.precipitation_probability_max[0] + '%</div>';
+  html += '<div class="w-mm">Máx ' + Math.round(dl.temperature_2m_max[di]) + '° · Mín ' + Math.round(dl.temperature_2m_min[di]) + '° · Chuva ' + dl.precipitation_probability_max[di] + '%</div>';
   if (idx >= 0) {
     html += '<div class="w-hours">';
     for (i = 1; i <= 4; i++) {
@@ -879,8 +885,11 @@ function renderTimer() {
   var box = $('timerCard'), html, i, btns;
   if (T.state === 'idle') {
     html = '<div class="label">⏱ Timer</div><div class="t-grid">';
-    for (i = 0; i < PRESETS.length; i++) html += '<div class="t-btn tap" data-min="' + PRESETS[i] + '"><div>' + presetLabel(PRESETS[i]) + '</div></div>';
-    html += '</div>';
+    for (i = 0; i < PRESETS.length; i++) {
+      if (i % 4 === 0) html += (i ? '</div>' : '') + '<div class="t-row">';
+      html += '<div class="t-btn tap" data-min="' + PRESETS[i] + '"><div>' + presetLabel(PRESETS[i]) + '</div></div>';
+    }
+    html += '</div></div>';
     box.className = 'card timer';
     box.innerHTML = html;
     btns = box.getElementsByClassName('t-btn');
