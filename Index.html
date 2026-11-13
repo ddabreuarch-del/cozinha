@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cozinha">
+<title>Cozinha</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-user-select: none; user-select: none; }
+html, body { height: 100%; overflow: hidden; background: #0a0f1a; color: #fff;
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+.tap { cursor: pointer; }
+.hidden { display: none !important; }
+.label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; opacity: .75; }
+.card { border-radius: 20px; padding: 16px 18px; position: relative; overflow: hidden; }
+
+#app { display: -webkit-flex; display: flex; width: 100%; height: 100%; padding: 14px; }
+
+/* ---------- Coluna esquerda ---------- */
+.left { -webkit-flex: 0 0 32%; flex: 0 0 32%; margin-right: 14px; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; min-width: 0; }
+.hero { -webkit-flex: 1.2; flex: 1.2; position: relative; border-radius: 20px; overflow: hidden; background: #1a1a1a; }
+.slide { position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0; -webkit-transition: opacity 1.2s ease; transition: opacity 1.2s ease;
+  background-size: cover; background-position: center; }
+.slide.on { opacity: 1; }
+.slide .emoji { position: absolute; right: -14px; top: 26%; font-size: 150px; line-height: 1; -webkit-transform: rotate(-12deg); transform: rotate(-12deg); }
+.slide .shade { position: absolute; left: 0; right: 0; bottom: 0; height: 60%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.85) 100%); }
+.slide .info { position: absolute; left: 20px; right: 20px; bottom: 30px; }
+.slide .kicker { font-size: 13px; opacity: .85; margin-bottom: 5px; }
+.slide .name { font-size: 26px; font-weight: 600; line-height: 1.1; margin-bottom: 6px; }
+.slide .hint { font-size: 13px; font-style: italic; opacity: .7; }
+.clockbox { position: absolute; left: 20px; top: 16px; text-shadow: 0 2px 12px rgba(0,0,0,.5); }
+#clock { font-size: 56px; font-weight: 300; letter-spacing: -1px; line-height: 1; }
+#date { font-size: 16px; margin-top: 5px; }
+#miniWeather { font-size: 16px; margin-top: 3px; }
+.dots { position: absolute; left: 0; right: 0; bottom: 12px; text-align: center; }
+.dots span { display: inline-block; width: 5px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.4); margin: 0 3px; }
+.dots span.on { background: #fff; width: 14px; }
+
+.meal { -webkit-flex: 1; flex: 1; margin-top: 14px; background: linear-gradient(160deg, #4a3326 0%, #2b1f18 100%);
+  display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; }
+.meal-top { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; }
+.meal-top .label { -webkit-flex: 1; flex: 1; color: #f3c58f; opacity: 1; }
+.meal-tema { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,.14); white-space: nowrap; }
+.meal h3 { font-size: 24px; font-weight: 600; margin: 4px 0 8px; }
+.meal ul { list-style: none; -webkit-flex: 1; flex: 1; overflow: hidden; min-height: 0; }
+.meal li { font-size: 14px; line-height: 1.3; margin-bottom: 6px; padding-left: 12px; position: relative; opacity: .95; }
+.meal li:before { content: ""; position: absolute; left: 0; top: 7px; width: 5px; height: 5px; border-radius: 3px; background: #e0a565; }
+.meal-foot { font-size: 13px; margin-top: 6px; opacity: .75; font-style: italic; }
+.meal-foot.prep { opacity: 1; font-style: normal; font-weight: 600; color: #ffd9a8; background: rgba(255,255,255,.1); border-radius: 10px; padding: 7px 10px; }
+
+/* ---------- Coluna direita ---------- */
+.right { -webkit-flex: 1; flex: 1; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; min-width: 0; }
+.meds { -webkit-flex: 1.65; flex: 1.65; margin-bottom: 14px; background: linear-gradient(135deg, #1b6a8f 0%, #134a6b 55%, #0f3a57 100%);
+  display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; padding-bottom: 14px; }
+.meds-head { display: -webkit-flex; display: flex; -webkit-align-items: flex-end; align-items: flex-end; margin-bottom: 12px; }
+.meds-head .l { -webkit-flex: 1; flex: 1; }
+#medsSummary { font-size: 21px; font-weight: 600; margin-top: 2px; }
+.meds-head .r { text-align: right; }
+.hist-link { font-size: 13px; font-weight: 600; opacity: .85; margin-bottom: 7px; }
+.prog { width: 140px; height: 7px; border-radius: 4px; background: rgba(255,255,255,.18); overflow: hidden; margin-bottom: 6px; }
+#progBar { height: 100%; width: 0; background: #5ee39a; border-radius: 4px; -webkit-transition: width .4s; transition: width .4s; }
+#slots { -webkit-flex: 1; flex: 1; display: -webkit-flex; display: flex; min-height: 0; }
+.slot { -webkit-flex: 1; flex: 1; min-width: 0; margin-right: 7px; background: rgba(0,0,0,.16); border-radius: 14px; padding: 9px 6px 6px; border: 2px solid transparent; }
+.slot:last-child { margin-right: 0; }
+.slot.current { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.45); }
+.slot.late { border-color: #f5b041; }
+.slot-head { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; margin-bottom: 7px; padding: 0 2px; }
+.slot-head .i { font-size: 15px; margin-right: 4px; }
+.slot-head .n { font-size: 15px; font-weight: 700; -webkit-flex: 1; flex: 1; white-space: nowrap; }
+.badge { font-size: 9px; font-weight: 800; padding: 3px 5px; border-radius: 8px; background: rgba(255,255,255,.2); letter-spacing: .3px; }
+.slot.current .badge { background: #fff; color: #134a6b; }
+.slot.late .badge { background: #f5b041; color: #3a2600; }
+.pill { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; background: rgba(255,255,255,.1); border-radius: 11px;
+  padding: 6px 6px; margin-bottom: 6px; -webkit-transition: background .25s; transition: background .25s; }
+.pill .chk { -webkit-flex: 0 0 22px; flex: 0 0 22px; height: 22px; border-radius: 11px; border: 2px solid rgba(255,255,255,.7); margin-right: 6px;
+  text-align: center; line-height: 18px; font-size: 13px; font-weight: 800; color: transparent; }
+.pill .txt { min-width: 0; -webkit-flex: 1; flex: 1; }
+.pill .pn { font-size: 14px; font-weight: 600; line-height: 1.15; }
+.pill .pd { font-size: 11px; opacity: .8; margin-top: 2px; line-height: 1.2; }
+.pill.taken { background: rgba(94,227,154,.25); }
+.pill.taken .chk { background: #5ee39a; border-color: #5ee39a; color: #0d3b24; }
+.pill.taken .pd { color: #b9f5d2; opacity: 1; font-weight: 600; }
+.pill.armed { background: rgba(245,176,65,.4); }
+.pill.off { opacity: .38; }
+.pill.off .chk { border-style: dashed; }
+.all-btn { text-align: center; font-size: 12px; font-weight: 700; padding: 7px 4px; border-radius: 10px; border: 1px dashed rgba(255,255,255,.5); opacity: .9; }
+
+.row { -webkit-flex: 1; flex: 1; display: -webkit-flex; display: flex; min-height: 0; }
+.weather { -webkit-flex: 1; flex: 1; margin-right: 14px; background: linear-gradient(165deg, #6fb2e6 0%, #3a7fbe 60%, #2b6599 100%); }
+.weather.night { background: linear-gradient(165deg, #2d3f6b 0%, #1d2a4d 60%, #141d38 100%); }
+.w-main { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; margin-top: 4px; }
+.w-ico { font-size: 44px; margin-right: 8px; }
+.w-temp { font-size: 48px; font-weight: 300; letter-spacing: -1px; }
+.w-desc { font-size: 14px; margin-top: 1px; }
+.w-mm { font-size: 12px; opacity: .85; margin-top: 3px; }
+.w-hours { display: -webkit-flex; display: flex; margin-top: 9px; border-top: 1px solid rgba(255,255,255,.25); padding-top: 8px; }
+.w-h { -webkit-flex: 1; flex: 1; text-align: center; font-size: 12px; }
+.w-h .e { font-size: 18px; margin: 2px 0; }
+.w-h .p { font-size: 10px; opacity: .8; }
+.w-upd { position: absolute; right: 16px; top: 17px; font-size: 10px; opacity: .65; }
+
+.timer { -webkit-flex: 1; flex: 1; background: #1b2232; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; }
+.t-grid { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; margin: 8px -4px 0; -webkit-flex: 1; flex: 1; }
+.t-btn { width: 25%; height: 50%; padding: 4px; }
+.t-btn div { background: #2b3550; border-radius: 12px; height: 100%; display: -webkit-flex; display: flex;
+  -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; font-size: 15px; font-weight: 600; white-space: nowrap; }
+.t-run { -webkit-flex: 1; flex: 1; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; -webkit-justify-content: center; justify-content: center; }
+#tLeft { font-size: 56px; font-weight: 300; text-align: center; letter-spacing: -1px; }
+.t-sub { text-align: center; font-size: 12px; opacity: .7; margin-bottom: 8px; }
+.t-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; margin: 0 6px 10px; }
+#tBar { height: 100%; background: #f5b041; width: 100%; }
+.t-acts { display: -webkit-flex; display: flex; }
+.t-act { -webkit-flex: 1; flex: 1; margin: 0 3px; background: #2b3550; border-radius: 12px; text-align: center; padding: 12px 0; font-size: 14px; font-weight: 600; }
+.t-act.stop { background: #5a2a2a; }
+.paused #tLeft { opacity: .45; }
+
+/* ---------- Modal ---------- */
+.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.7); z-index: 10; padding: 26px 50px; }
+.sheet { position: relative; background: #fbf8f3; color: #2a2420; border-radius: 22px; height: 100%; overflow: hidden;
+  display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; }
+.sheet-top { -webkit-flex: 0 0 auto; flex: 0 0 auto; padding: 22px 28px 16px; color: #fff; position: relative; background: #2b1f18; }
+.sheet-top .e { position: absolute; right: 122px; top: 6px; font-size: 76px; }
+.sheet-top h2 { font-size: 27px; font-weight: 600; padding-right: 200px; }
+.sheet-top p { font-size: 14px; opacity: .9; margin-top: 4px; padding-right: 150px; }
+.sheet-body { -webkit-flex: 1; flex: 1; min-height: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 18px 28px 28px; }
+.cols { display: -webkit-flex; display: flex; }
+.cols .c1 { -webkit-flex: 0 0 40%; flex: 0 0 40%; padding-right: 24px; }
+.cols .c2 { -webkit-flex: 1; flex: 1; }
+.sheet-body h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: #9a6b3c; margin: 0 0 9px; }
+.sheet-body li { font-size: 16px; line-height: 1.4; margin-bottom: 8px; }
+.sheet-body ul { list-style: none; }
+.sheet-body ul li:before { content: "• "; color: #c58a4a; }
+.sheet-body ol { padding-left: 22px; }
+.chips span { display: inline-block; font-size: 13px; padding: 5px 10px; border-radius: 14px; background: #efe5d7; margin: 0 6px 6px 0; }
+.note { font-size: 14px; line-height: 1.4; background: #f3ead9; border-radius: 12px; padding: 10px 14px; margin-top: 14px; color: #6b4a26; }
+.close, .back { position: absolute; top: 14px; width: 42px; height: 42px; border-radius: 21px; background: rgba(0,0,0,.35); color: #fff;
+  text-align: center; line-height: 42px; font-size: 19px; z-index: 2; }
+.close { right: 14px; }
+.back { right: 64px; font-size: 24px; line-height: 40px; }
+
+.tabs { display: -webkit-flex; display: flex; margin-top: 12px; }
+.tabs div { -webkit-flex: 1; flex: 1; text-align: center; padding: 8px 0; font-size: 14px; font-weight: 600; border-radius: 10px; margin-right: 6px; background: rgba(255,255,255,.12); }
+.tabs div:last-child { margin-right: 0; }
+.tabs div.sel { background: #fff; color: #2b1f18; }
+.tabs div.hoje { box-shadow: inset 0 -3px 0 #e0a565; }
+.mrow { display: -webkit-flex; display: flex; padding: 12px 0; border-bottom: 1px solid #ece2d3; }
+.mrow:last-child { border-bottom: 0; }
+.mrow.now { background: #fff3e0; margin: 0 -14px; padding: 12px 14px; border-radius: 12px; border-bottom-color: transparent; }
+.mrow .h { -webkit-flex: 0 0 74px; flex: 0 0 74px; font-size: 17px; font-weight: 700; color: #9a6b3c; }
+.mrow .h small { display: block; font-size: 11px; font-weight: 600; color: #8a7a6a; text-transform: uppercase; margin-top: 2px; }
+.mrow .b { -webkit-flex: 1; flex: 1; }
+.mrow .b div.it { font-size: 15px; line-height: 1.35; margin-bottom: 3px; }
+.mrow .tags { margin-top: 5px; }
+.mrow .tags span { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: #8a6a48; background: #f1e6d6; padding: 3px 7px; border-radius: 8px; margin: 0 4px 3px 0; }
+.rbtn { display: inline-block; margin-top: 6px; font-size: 13px; font-weight: 700; color: #fff; background: #b8743a; padding: 6px 12px; border-radius: 14px; }
+
+.hist { width: 100%; border-collapse: collapse; }
+.hist th { font-size: 12px; color: #8a7a6a; font-weight: 700; padding: 6px 4px; text-align: center; }
+.hist th.l, .hist td.l { text-align: left; }
+.hist td { font-size: 14px; padding: 6px 4px; text-align: center; border-top: 1px solid #ece2d3; }
+.hist td.l small { color: #9a8a7a; }
+.hist .y { color: #fff; background: #36b37e; border-radius: 10px; display: inline-block; min-width: 46px; padding: 2px 0; font-size: 12px; font-weight: 700; }
+.hist .n { color: #d0c2b0; }
+.hist .x { color: #e0d6c8; }
+.hist th.today { color: #2a2420; }
+
+/* ---------- Alarme ---------- */
+.alarm { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 20; background: #c0392b; text-align: center;
+  display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center;
+  -webkit-animation: flash 1s infinite; animation: flash 1s infinite; }
+.alarm .big { font-size: 120px; }
+.alarm .t { font-size: 56px; font-weight: 700; margin-top: 10px; }
+.alarm .s { font-size: 22px; opacity: .85; margin-top: 10px; }
+@-webkit-keyframes flash { 0%,100% { background: #c0392b; } 50% { background: #e67e22; } }
+@keyframes flash { 0%,100% { background: #c0392b; } 50% { background: #e67e22; } }
+
+/* ---------- Retrato ---------- */
+@media (orientation: portrait) {
+  #app { -webkit-flex-direction: column; flex-direction: column; }
+  .left { -webkit-flex: 0 0 34%; flex: 0 0 34%; -webkit-flex-direction: row; flex-direction: row; margin-right: 0; margin-bottom: 14px; }
+  .meal { margin-top: 0; margin-left: 14px; }
+  .modal { padding: 36px 20px; }
+  .cols { display: block; }
+  .cols .c1 { padding-right: 0; margin-bottom: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="left">
+    <div class="hero tap" id="hero">
+      <div id="slides"></div>
+      <div class="clockbox">
+        <div id="clock">--:--</div>
+        <div id="date"></div>
+        <div id="miniWeather"></div>
+      </div>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="card meal tap" id="meal"></div>
+  </div>
+
+  <div class="right">
+    <div class="card meds">
+      <div class="meds-head">
+        <div class="l">
+          <div class="label">Remédios e suplementos</div>
+          <div id="medsSummary"></div>
+        </div>
+        <div class="r">
+          <div class="hist-link tap" id="histLink">Últimos 7 dias ›</div>
+          <div class="prog"><div id="progBar"></div></div>
+        </div>
+      </div>
+      <div id="slots"></div>
+    </div>
+
+    <div class="row">
+      <div class="card weather" id="weather">
+        <div class="label">Tempo</div>
+        <div class="w-desc" style="margin-top:20px;opacity:.8">Carregando previsão…</div>
+      </div>
+      <div class="card timer" id="timerCard"></div>
+    </div>
+  </div>
+</div>
+
+<div id="modal" class="modal hidden"><div class="sheet" id="sheet"></div></div>
+
+<div id="alarm" class="alarm hidden tap">
+  <div>
+    <div class="big">⏰</div>
+    <div class="t">Timer acabou!</div>
+    <div class="s">Toque em qualquer lugar para parar</div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO
+   ===================================================================== */
+var CONFIG = {
+  cidade: 'Botafogo, Rio',
+  lat: -22.95,
+  lon: -43.18,
+  segundosPorReceita: 25,
+  atualizarTempoMinutos: 30
+};
+
+/* Períodos. "inicio" = hora em que o período passa a ser o atual. */
+var PERIODOS = [
+  { id: 'manha',  nome: 'Manhã',  icone: '☀️', inicio: 0  },
+  { id: 'almoco', nome: 'Almoço', icone: '🍴', inicio: 11 },
+  { id: 'jantar', nome: 'Jantar', icone: '🍲', inicio: 17 },
+  { id: 'noite',  nome: 'Dormir', icone: '🌙', inicio: 21 }
+];
+
+/* Remédios e suplementos, na ordem em que aparecem em cada período.
+   dias: [0..6] (0 = domingo)  ·  alternado: 'AAAA-MM-DD' = uma data em que você TOMOU (conta dia sim, dia não a partir dela) */
+var REMEDIOS = [
+  { id: 'f1-manha',     periodo: 'manha',  nome: 'Inositol + NAC',  dose: 'Sachê em jejum' },
+  { id: 'lisina-manha', periodo: 'manha',  nome: 'L-lisina',        dose: '12 em 12 h' },
+  { id: 'dry',          periodo: 'manha',  nome: 'Dry',             dose: '½ comprimido' },
+  { id: 'indux',        periodo: 'manha',  nome: 'Indux',           dose: '½ comprimido', alternado: '2026-11-13' },
+  { id: 'f2',           periodo: 'manha',  nome: 'CoQ10 + B12',     dose: '2 cáps no café' },
+
+  { id: 'enz-almoco',   periodo: 'almoco', nome: 'Enzimas',         dose: 'Início do almoço' },
+  { id: 'roacutan',     periodo: 'almoco', nome: 'Roacutan',        dose: 'Com o almoço' },
+  { id: 'aciclovir',    periodo: 'almoco', nome: 'Aciclovir',       dose: '1x ao dia' },
+  { id: 'f3',           periodo: 'almoco', nome: 'Vitamina D + K2', dose: '1 cápsula' },
+
+  { id: 'enz-jantar',   periodo: 'jantar', nome: 'Enzimas',         dose: 'Início do jantar' },
+  { id: 'lisina-noite', periodo: 'jantar', nome: 'L-lisina',        dose: '12 em 12 h' },
+
+  { id: 'f1-noite',     periodo: 'noite',  nome: 'Inositol + NAC',  dose: 'Sachê na água' },
+  { id: 'minoxidil',    periodo: 'noite',  nome: 'Minoxidil',       dose: 'Antes de dormir' }
+];
+
+/* =====================================================================
+   PLANO ALIMENTAR — Carine Abreu (7 dias). Índice = dia da semana (0 = domingo).
+   Cada refeição: [hora, nome, itens, marcadores, receita]
+   ===================================================================== */
+var CARDAPIO = [
+  { tema: 'Moqueca de peixe', ref: [
+    ['07:00', 'Shot matinal', ['Leite dourado: 60 ml de leite de coco, cúrcuma, canela e pimenta-do-reino'], ['Anti-inflamatório'], 'shot'],
+    ['08:30', 'Café da manhã', ['Omelete de 2 ovos com tomate, manjericão e queijo', '1 fatia de pão sem glúten', '¼ de abacate em fatias', '100 g de iogurte grego', '1 fatia de melancia', 'Café ou chá verde'], ['Proteína', 'Licopeno'], ''],
+    ['10:30', 'Lanche da manhã', ['Patê de cottage (100 g) com ervas e tomate-cereja picado, sobre 2 biscoitos de arroz', '15 g de nozes', '½ xícara de frutas vermelhas e 1 castanha-do-Pará', 'Chá verde'], ['Vitamina C', 'Selênio'], ''],
+    ['13:00', 'Almoço', ['Moqueca de 180 g de peixe com tomate, pimentão, salsinha e leite de coco', '4 col. sopa de arroz integral (100 g) ou 100 g de inhame', 'Salada de folhas e palmito'], ['Ômega-3', 'Licopeno'], ''],
+    ['16:30', 'Lanche da tarde', ['Iogurte grego (170 g) com 2 col. sopa de granola caseira sem glúten', '½ xícara de frutas vermelhas'], ['Probióticos', 'Polifenóis'], ''],
+    ['19:30', 'Jantar prático', ['Assadeira única: 180 g de frango com brócolis, cenoura e cebola, azeite, alho e cúrcuma, 35 min no forno', '100 g de inhame ou mandioca na mesma forma', 'Separe porções para a marmita de segunda'], ['Uma forma só', 'Anti-inflamatório'], '']
+  ]},
+  { tema: 'Sem carne vermelha', ref: [
+    ['06:30', 'Shot matinal', ['Shot de gengibre, limão e cúrcuma (60 ml)'], ['Anti-inflamatório'], 'shot'],
+    ['07:30', 'Café da manhã', ['Pão de frigideira low carb (2 ovos) com 40 g de queijo minas frescal e tomate', '60 g de ricota temperada com ervas', '100 g de mamão', 'Café ou chá verde sem açúcar'], ['Zinco', 'Proteína', 'Sem glúten'], 'pao'],
+    ['10:00', 'Lanche da manhã', ['Overnight oats sem glúten, sabor manga e maracujá, com 150 g de iogurte grego', '1 castanha-do-Pará e 15 g de nozes'], ['Selênio', 'Vitamina C'], 'oats'],
+    ['12:30', 'Almoço', ['150 g de frango grelhado com cúrcuma, limão e alho', '3 col. sopa de arroz integral (75 g) ou 75 g de mandioca cozida', '¾ de concha de feijão (80 g)', 'Brócolis e cenoura no vapor', 'Salada de folhas com azeite extravirgem'], ['Anti-inflamatório', 'Folato'], ''],
+    ['16:00', 'Lanche da tarde', ['Bowl de iogurte grego (170 g) com 50 g de frutas vermelhas', '1 col. sopa de coco ralado e 1 col. sopa de chia', 'Chá verde'], ['Polifenóis', 'Probióticos'], ''],
+    ['19:30', 'Jantar prático', ['Bowl de camarão: 150 g de camarão salteado no alho e azeite, 3 col. sopa de grão-de-bico, tomate-cereja, pepino e folhas', 'Azeite, limão e orégano'], ['Proteína magra', 'Pronto em 10 min'], '']
+  ]},
+  { tema: 'Carne vermelha · 1 de 2', ref: [
+    ['06:30', 'Shot matinal', ['Shot verde: couve, pepino, hortelã, limão e água de coco (80 ml)'], ['Clorofila', 'Hidratação'], 'shot'],
+    ['07:30', 'Café da manhã', ['Crepioca: 2 ovos e 1 col. sopa de goma de tapioca', 'Recheio de 60 g de cottage, 40 g de queijo minas frescal e tomate', '1 xícara de morangos ou frutas vermelhas', 'Café ou chá verde'], ['Proteína', 'Polifenóis'], ''],
+    ['10:00', 'Lanche da manhã', ['Iogurte grego (150 g) com 20 g de nozes (cerca de 4 metades)', '1 fatia de melão'], ['Ômega-3', 'Hidratação'], ''],
+    ['12:30', 'Almoço', ['170 g de patinho ou alcatra magra grelhado com alho', '150 g de purê de inhame', 'Couve refogada no alho', 'Salada de beterraba ralada e rúcula com azeite'], ['Zinco', 'Ferro', 'Folato'], ''],
+    ['16:00', 'Lanche da tarde', ['Iogurte grego (150 g) com 1 col. chá de cacau em pó', '2 quadradinhos de chocolate 70% cacau sem glúten (20 g)', '1 laranja', 'Chá de hortelã ou chá verde'], ['Polifenóis', 'Vitamina C'], ''],
+    ['19:30', 'Jantar prático', ['Omelete de 2 ovos recheada com 100 g de frango desfiado, cogumelos e alho-poró', 'Salada de rúcula e tomate com azeite'], ['Zinco', 'Pronto em 15 min'], '']
+  ]},
+  { tema: 'Dia de peixe gordo', ref: [
+    ['06:30', 'Shot matinal', ['Shot de acerola e gengibre (60 ml)'], ['Vitamina C'], 'shot'],
+    ['07:30', 'Café da manhã', ['Smoothie verde com whey: 200 ml de kefir ou iogurte, 1 scoop (30 g) de whey sem açúcar, espinafre, ¼ de abacate, ½ banana-prata, 1 col. sopa de chia e gengibre', '2 ovos cozidos'], ['Proteína', 'Probióticos', 'Folato'], 'smoothie'],
+    ['10:00', 'Lanche da manhã', ['Pudim de chia de coco e maracujá com 100 g de iogurte grego', '1 castanha-do-Pará'], ['Ômega-3', 'Selênio'], 'pudim'],
+    ['12:30', 'Almoço', ['180 g de salmão assado com ervas e limão', '4 col. sopa de quinoa (100 g) ou 100 g de inhame cozido', 'Aspargos ou vagem salteados no azeite', 'Salada de rúcula e tomate'], ['Ômega-3', 'Selênio', 'Folato'], ''],
+    ['16:00', 'Lanche da tarde', ['Palitos de cenoura e pepino com 60 g de homus', '100 g de queijo cottage com tomate-cereja', '15 g de nozes', 'Chá verde'], ['Proteína', 'Antioxidantes'], ''],
+    ['19:30', 'Jantar prático', ['Sopa cremosa de abóbora com gengibre e cúrcuma, com 150 g de frango desfiado', 'Sementes de abóbora por cima'], ['Anti-inflamatório', 'Feita em lote'], '']
+  ]},
+  { tema: 'Dia de peixe', ref: [
+    ['06:30', 'Shot matinal', ['Shot de abacaxi, hortelã e cúrcuma (60 ml)'], ['Bromelina', 'Anti-inflamatório'], 'shot'],
+    ['07:30', 'Café da manhã', ['Overnight oats sem glúten, sabor cacau e coco, com 150 g de iogurte grego', '½ xícara de frutas vermelhas', '2 ovos cozidos', 'Café ou chá verde'], ['Proteína', 'Polifenóis'], 'oats'],
+    ['10:00', 'Lanche da manhã', ['Patê de cottage (100 g) com limão, cebolinha e azeite, sobre 2 biscoitos de arroz', '20 g de nozes e 1 castanha-do-Pará', '½ fatia de mamão'], ['Selênio', 'Proteína'], ''],
+    ['12:30', 'Almoço', ['150 g de peixe branco grelhado com limão e ervas', '4 col. sopa de lentilha (100 g) ou 100 g de mandioca cozida', 'Abobrinha refogada no alho e azeite', 'Salada colorida com azeite'], ['Folato', 'Proteína magra'], ''],
+    ['16:00', 'Lanche da tarde', ['Patê de atum: 1 lata de atum (120 g) com 50 g de iogurte grego e limão', 'Palitos de pepino e cenoura', 'Chá verde'], ['Proteína magra', 'Pronto em 5 min'], ''],
+    ['19:30', 'Jantar prático', ['Poke bowl de salmão: 150 g de salmão, 4 col. sopa de arroz integral (100 g) ou 100 g de inhame, pepino, cenoura, couve fatiada, manga e gergelim', 'Molho de tamari sem glúten, limão e gengibre'], ['Ômega-3', 'Sem glúten'], 'poke']
+  ]},
+  { tema: 'Sardinha no jantar', ref: [
+    ['06:30', 'Shot matinal', ['Shot de laranja, beterraba e gengibre (60 ml)'], ['Vitamina C', 'Nitratos'], 'shot'],
+    ['07:30', 'Café da manhã', ['1 fatia de pão sem glúten de inhame e sementes', 'Ovos mexidos (2) com tomate e fio de azeite', '¼ de abacate em fatias', '1 fatia de melão', 'Café ou chá verde'], ['Proteína', 'Licopeno'], 'paoinhame'],
+    ['10:00', 'Lanche da manhã', ['Bowl de iogurte grego (170 g) com ½ xícara de frutas vermelhas', '1 castanha-do-Pará e 1 col. sopa de sementes de abóbora'], ['Selênio', 'Zinco'], ''],
+    ['12:30', 'Almoço', ['170 g de frango ao molho de tomate caseiro cozido no azeite', '4 col. sopa de arroz integral (100 g) ou 100 g de inhame', 'Feijão-preto', 'Couve refogada', 'Salada de folhas com azeite'], ['Licopeno', 'Folato'], ''],
+    ['16:00', 'Lanche da tarde', ['Smoothie de frutas vermelhas com whey: 200 ml de kefir ou iogurte, 1 scoop (30 g) de whey sem açúcar, 100 g de frutas vermelhas, 1 col. sopa de pasta de castanhas e 1 col. chá de chia', 'Chá verde'], ['Proteína', 'Polifenóis', 'Probióticos'], 'smoothie'],
+    ['19:30', 'Jantar prático', ['Wrap low carb (2 ovos) de sardinha amassada com limão, rúcula e cenoura ralada', 'Salada de tomate com azeite'], ['Ômega-3', 'Pronto em 10 min'], 'wrap']
+  ]},
+  { tema: 'Carne vermelha · 2 de 2', ref: [
+    ['06:30', 'Shot matinal', ['Shot de maracujá, hortelã e chia (60 ml)'], ['Antioxidantes'], 'shot'],
+    ['08:00', 'Café da manhã', ['Panqueca de 1 banana-prata, 2 ovos e canela', '2 col. chá de pasta de amendoim integral (10 g)', '100 g de iogurte grego com ½ xícara de frutas vermelhas', 'Café ou chá verde'], ['Proteína', 'Potássio'], ''],
+    ['10:30', 'Lanche da manhã', ['Pudim de chia de cacau e frutas vermelhas com 100 g de iogurte grego', '1 castanha-do-Pará'], ['Polifenóis', 'Selênio'], 'pudim'],
+    ['13:00', 'Almoço', ['170 g de filé mignon ou alcatra magra grelhado', 'Legumes assados no azeite: abobrinha, berinjela e pimentão', '100 g de mandioca ou batata-doce assada', 'Salada de folhas verdes'], ['Zinco', 'Ferro', 'Antioxidantes'], ''],
+    ['16:30', 'Lanche da tarde', ['Smoothie de açaí com whey: 100 g de polpa de açaí sem açúcar, 1 scoop (30 g) de whey sem açúcar, 1 banana-prata pequena, 150 ml de bebida vegetal sem açúcar e 1 col. sopa de chia'], ['Proteína', 'Polifenóis'], 'acai'],
+    ['20:00', 'Jantar prático', ['Pizza de frigideira low carb (massa de 2 ovos, queijos, 60 g de frango desfiado e molho de tomate caseiro)', 'Salada de rúcula com azeite'], ['Licopeno', 'Pronto em 15 min'], 'pizza']
+  ]}
+];
+
+/* Shots matinais por dia da semana (0 = domingo) */
+var SHOTS = [
+  { nome: 'Leite dourado', ing: ['60 ml de leite de coco morno', '½ col. chá de cúrcuma', 'Canela e pimenta-do-reino', 'Sem açúcar'], prep: '' },
+  { nome: 'Gengibre, limão e cúrcuma', ing: ['1 cm de gengibre', '½ col. chá de cúrcuma', 'Suco de ½ limão', 'Pitada de pimenta-do-reino', '60 ml de água morna'], prep: '' },
+  { nome: 'Verde refrescante', ing: ['½ folha de couve', '¼ de pepino', 'Hortelã', 'Suco de ½ limão', '80 ml de água de coco'], prep: 'Bater e coar.' },
+  { nome: 'Acerola e gengibre', ing: ['6 acerolas', '1 cm de gengibre', '60 ml de água'], prep: 'Bater e coar.' },
+  { nome: 'Abacaxi, hortelã e cúrcuma', ing: ['80 g de abacaxi', 'Folhas de hortelã', '½ col. chá de cúrcuma', 'Pimenta-do-reino', '30 ml de água'], prep: 'Bater e coar.' },
+  { nome: 'Laranja, beterraba e gengibre', ing: ['Suco de 1 laranja', '¼ de beterraba pequena', '1 cm de gengibre'], prep: 'Bater e coar.' },
+  { nome: 'Maracujá, hortelã e chia', ing: ['Polpa de 1 maracujá', 'Hortelã', '1 col. chá de chia hidratada', '60 ml de água de coco'], prep: '' }
+];
+
+/* Receitas e bases do plano */
+var RECEITAS = {
+  pao: { nome: 'Pão de frigideira low carb', grupo: 'Café e lanche', emoji: '🍞', cores: ['#8a5a2b', '#d9a35b'],
+    ing: ['2 ovos', '2 col. sopa de farinha de amêndoas', '1 col. sopa de farinha de linhaça', '1 col. sopa de iogurte natural', '1 col. chá de fermento sem glúten', 'Sal e orégano'],
+    prep: ['Bata tudo até ficar homogêneo.', 'Despeje em frigideira pequena antiaderente untada com azeite, em fogo baixo e tampada.', 'Cozinhe 3 a 4 minutos de cada lado. Rende 1 pão.'],
+    extraT: 'Recheios', extra: ['Ricota e tomate', 'Queijo minas e orégano', 'Ovo e espinafre', 'Cúrcuma e ervas finas'] },
+  wrap: { nome: 'Wrap low carb', grupo: 'Café, lanche e jantar', emoji: '🌯', cores: ['#6b5a2a', '#c9b05a'],
+    ing: ['2 ovos', '1 col. sopa de goma de tapioca', 'Sal, orégano e pimenta-do-reino'],
+    prep: ['Bata os ingredientes.', 'Despeje em frigideira antiaderente larga, levemente untada, em fogo baixo.', 'Cozinhe 1 a 2 minutos, vire e deixe mais 30 segundos.', 'Recheie e enrole.'],
+    extraT: 'Recheios', extra: ['Frango desfiado e rúcula', 'Sardinha amassada, cenoura e limão', 'Atum e tomate', 'Ricota, tomate e manjericão'] },
+  paoinhame: { nome: 'Pão sem glúten de inhame e sementes', grupo: 'Café e lanche', emoji: '🍠', cores: ['#6e4a35', '#b9886a'],
+    ing: ['200 g de inhame cozido e amassado', '2 ovos', '3 col. sopa de mix de sementes (linhaça, girassol, abóbora)', '1 col. sopa de azeite', '1 col. chá de fermento sem glúten', 'Sal'],
+    prep: ['Misture tudo até formar uma massa firme.', 'Coloque em forma pequena untada e asse a 180 °C por 35 a 40 minutos.', 'Deixe esfriar antes de fatiar.'],
+    nota: 'Alternativa: pão de forma sem glúten, conferindo o rótulo.' },
+  oats: { nome: 'Overnight oats sem glúten', grupo: 'Café e lanche · prepare na véspera', emoji: '🌾', cores: ['#7a6236', '#d8bd7a'],
+    ing: ['3 col. sopa de aveia sem glúten certificada (ou flocos de quinoa)', '100 g de iogurte natural', '100 ml de leite ou bebida vegetal sem açúcar', '1 col. sopa de chia', '1 col. sopa de sementes de abóbora'],
+    prep: ['Misture tudo em um pote e tampe.', 'Leve à geladeira por pelo menos 6 horas.', 'Finalize com a fruta na hora de comer.'],
+    extraT: 'Sabores', extra: ['Manga e maracujá', 'Cacau e coco', 'Abacaxi, hortelã e cúrcuma', 'Mamão e canela', 'Frutas vermelhas e coco', 'Acerola e baunilha'] },
+  pudim: { nome: 'Pudim de chia', grupo: 'Lanche e sobremesa · prepare na véspera', emoji: '🍮', cores: ['#6b3d5c', '#c27aa5'],
+    ing: ['3 col. sopa de chia', '200 ml de leite de coco ou bebida vegetal sem açúcar', '1 col. chá de baunilha', 'Fruta ou tempero do sabor escolhido'],
+    prep: ['Misture, espere 10 minutos e mexa de novo para não empedrar.', 'Leve à geladeira por pelo menos 4 horas.', 'Cubra com a fruta na hora de servir.'],
+    extraT: 'Sabores', extra: ['Coco e maracujá', 'Cacau e manga', 'Abacaxi e gengibre', 'Baunilha e mamão', 'Frutas vermelhas e baunilha', 'Cúrcuma e laranja'] },
+  poke: { nome: 'Poke bowl de salmão', grupo: 'Jantar prático', emoji: '🍣', cores: ['#b2483a', '#f08a6a'],
+    ing: ['120 g de salmão em cubos, grelhado ou cru de procedência confiável', 'Base: 3 col. sopa de arroz integral ou 100 g de inhame/mandioca cozidos', 'Pepino, cenoura ralada, couve fatiada fina e rabanete', '40 g de manga em cubos', '1 col. sopa de gergelim', 'Molho: 1 col. sobremesa de tamari sem glúten, suco de limão, gengibre ralado e 1 col. chá de azeite'],
+    prep: ['Monte a base.', 'Distribua os vegetais e o salmão.', 'Regue com o molho.'],
+    nota: 'O shoyu comum contém trigo: use tamari sem glúten.',
+    extraT: 'Variações', extra: ['Atum fresco', 'Frango desfiado', 'Base de arroz de couve-flor'] },
+  smoothie: { nome: 'Smoothie com whey', grupo: 'Café e lanche', emoji: '🍓', cores: ['#9c2f4a', '#e66f87'],
+    ing: ['200 ml de kefir ou iogurte', '1 scoop (30 g) de whey sem açúcar e sem glúten', 'Fruta do sabor: 100 g de frutas vermelhas, ou espinafre com ½ banana e ¼ de abacate', '1 col. sopa de chia', '1 col. sopa de pasta de castanhas (opcional)'],
+    prep: ['Bata tudo no liquidificador com gelo por 1 minuto.', 'Sirva em seguida.'],
+    nota: 'Escolha um whey sem açúcar adicionado e confira no rótulo a indicação sem glúten.',
+    extraT: 'Sabores', extra: ['Verde com abacate', 'Frutas vermelhas', 'Cacau e banana'] },
+  acai: { nome: 'Smoothie de açaí com whey', grupo: 'Lanche da tarde', emoji: '🍇', cores: ['#3f1e4f', '#8a4fa8'],
+    ing: ['100 g de polpa de açaí pura, sem açúcar (congelada)', '1 scoop (30 g) de whey sem açúcar', '1 banana-prata pequena', '150 ml de bebida vegetal sem açúcar', '1 col. sopa de chia'],
+    prep: ['Bata a polpa ainda congelada com os demais ingredientes até ficar cremoso, cerca de 1 minuto.', 'Se ficar espesso, junte um pouco de água de coco.'],
+    nota: 'Evite xarope de guaraná e adoçantes.',
+    extraT: 'Coberturas', extra: ['Coco ralado', 'Frutas vermelhas', 'Cacau em pó'] },
+  pizza: { nome: 'Pizza de frigideira low carb', grupo: 'Jantar prático', emoji: '🍕', cores: ['#9b2c2c', '#e0743c'],
+    ing: ['Massa: 2 ovos, 3 col. sopa de parmesão ralado, 1 col. sopa de farinha de amêndoas, ½ col. chá de fermento sem glúten, orégano e sal', 'Molho: 3 col. sopa de tomate cozido com alho, azeite e manjericão, sem açúcar', 'Cobertura: 40 g de mussarela de búfala, tomate fatiado, cogumelos salteados', 'Final: rúcula, manjericão fresco e fio de azeite'],
+    prep: ['Bata os ingredientes da massa.', 'Em frigideira antiaderente de 24 cm untada, fogo baixo e tampada, cozinhe por 4 minutos até firmar.', 'Vire com cuidado e deixe 1 minuto.', 'Espalhe o molho, o queijo, o tomate e os cogumelos. Tampe por 3 minutos até derreter.', 'Finalize com a rúcula e o manjericão.'],
+    extraT: 'Variações de cobertura', extra: ['Frango desfiado e cebola roxa', 'Atum, tomate-cereja e orégano', 'Cogumelos, alho-poró e queijo minas'] }
+};
+var ORDEM_RECEITAS = ['pao', 'wrap', 'paoinhame', 'oats', 'pudim', 'poke', 'smoothie', 'acai', 'pizza'];
+var NOTA_SHOT = 'Tomar por volta das 6h30, antes do café, em pequenos goles. Se houver desconforto gástrico: comece com metade do gengibre e da cúrcuma, dilua em água e, se incomodar em jejum, tome junto ou logo após o café da manhã.';
+
+/* =====================================================================
+   Utilitários (ES5, compatível com iOS 9)
+   ===================================================================== */
+var DIAS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+var DIAS_CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+function $(id) { return document.getElementById(id); }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function hhmm(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function dayKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function toMin(h) { var p = h.split(':'); return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); }
+function hLabel(h) { return h.replace(':', 'h'); }
+
+var memStore = {};
+function lsGet(k) {
+  try { var v = window.localStorage.getItem(k); return v === null ? (memStore[k] || null) : v; }
+  catch (e) { return memStore[k] || null; }
+}
+function lsSet(k, v) {
+  memStore[k] = v;
+  try { window.localStorage.setItem(k, v); } catch (e) {}
+}
+
+/* =====================================================================
+   Relógio
+   ===================================================================== */
+function updateClock(now) {
+  $('clock').innerHTML = hhmm(now);
+  $('date').innerHTML = DIAS[now.getDay()] + ', ' + now.getDate() + ' de ' + MESES[now.getMonth()];
+}
+
+/* =====================================================================
+   Receitas (carrossel) — as do cardápio de hoje vêm primeiro
+   ===================================================================== */
+var slideIdx = 0, slideList = [], slideEls = [], slideTimer = null, modalOpen = false;
+
+function recipeObj(id, dow) {
+  if (id === 'shot') {
+    var s = SHOTS[dow];
+    return { nome: 'Shot: ' + s.nome, grupo: 'Shot matinal de ' + DIAS[dow], emoji: '🍋', cores: ['#a5761a', '#e8c547'],
+      ing: s.ing, prep: s.prep ? [s.prep] : [], nota: NOTA_SHOT };
+  }
+  return RECEITAS[id];
+}
+
+function buildSlides() {
+  var now = new Date(), dow = now.getDay(), ref = CARDAPIO[dow].ref, used = {}, i, r, el, html, ob;
+  slideList = [];
+  for (i = 0; i < ref.length; i++) {
+    if (ref[i][4] && !used[ref[i][4]]) { used[ref[i][4]] = 1; slideList.push({ id: ref[i][4], kicker: 'No cardápio de hoje · ' + ref[i][1] }); }
+  }
+  for (i = 0; i < ORDEM_RECEITAS.length; i++) {
+    if (!used[ORDEM_RECEITAS[i]]) slideList.push({ id: ORDEM_RECEITAS[i], kicker: 'Receita da nutri · ' + RECEITAS[ORDEM_RECEITAS[i]].grupo });
+  }
+
+  $('slides').innerHTML = ''; slideEls = []; html = '';
+  for (i = 0; i < slideList.length; i++) {
+    ob = recipeObj(slideList[i].id, dow);
+    el = document.createElement('div');
+    el.className = 'slide' + (i === 0 ? ' on' : '');
+    if (ob.img) el.style.backgroundImage = 'url(' + ob.img + ')';
+    else el.style.backgroundImage = 'linear-gradient(150deg, ' + ob.cores[0] + ' 0%, ' + ob.cores[1] + ' 100%)';
+    el.innerHTML = (ob.img ? '' : '<div class="emoji">' + ob.emoji + '</div>') + '<div class="shade"></div><div class="info">' +
+      '<div class="kicker">' + esc(slideList[i].kicker) + '</div><div class="name">' + esc(ob.nome) + '</div>' +
+      '<div class="hint">Toque para ver a receita</div></div>';
+    $('slides').appendChild(el);
+    slideEls.push(el);
+    html += '<span' + (i === 0 ? ' class="on"' : '') + '></span>';
+  }
+  $('dots').innerHTML = html;
+  slideIdx = 0;
+}
+
+function showSlide(n) {
+  var spans = $('dots').getElementsByTagName('span'), i;
+  slideIdx = (n + slideEls.length) % slideEls.length;
+  for (i = 0; i < slideEls.length; i++) {
+    slideEls[i].className = 'slide' + (i === slideIdx ? ' on' : '');
+    spans[i].className = i === slideIdx ? 'on' : '';
+  }
+}
+
+/* =====================================================================
+   Modal genérico
+   ===================================================================== */
+function openSheet(html) {
+  $('sheet').innerHTML = html;
+  $('modal').className = 'modal';
+  modalOpen = true;
+  var c = $('sheetClose'); if (c) c.onclick = closeSheet;
+}
+function closeSheet() { $('modal').className = 'modal hidden'; modalOpen = false; }
+
+function listHtml(arr, tag) {
+  var h = '<' + tag + '>', i;
+  for (i = 0; i < arr.length; i++) h += '<li>' + esc(arr[i]) + '</li>';
+  return h + '</' + tag + '>';
+}
+
+function openRecipe(id, dow, backTo) {
+  var r = recipeObj(id, dow), html, i;
+  html = '<div class="sheet-top" style="background-image:linear-gradient(150deg,' + r.cores[0] + ',' + r.cores[1] + ')">' +
+    '<div class="e">' + r.emoji + '</div><h2>' + esc(r.nome) + '</h2><p>' + esc(r.grupo) + ' · Plano da Carine</p>' +
+    (backTo !== undefined ? '<div class="back tap" id="sheetBack">‹</div>' : '') + '<div class="close tap" id="sheetClose">✕</div></div>';
+  html += '<div class="sheet-body"><div class="cols"><div class="c1"><h4>Ingredientes</h4>' + listHtml(r.ing, 'ul') + '</div><div class="c2">';
+  if (r.prep && r.prep.length) html += '<h4>Modo de preparo</h4>' + listHtml(r.prep, 'ol');
+  if (r.extra) {
+    html += '<h4 style="margin-top:16px">' + esc(r.extraT) + '</h4><div class="chips">';
+    for (i = 0; i < r.extra.length; i++) html += '<span>' + esc(r.extra[i]) + '</span>';
+    html += '</div>';
+  }
+  if (r.nota) html += '<div class="note">' + esc(r.nota) + '</div>';
+  html += '</div></div></div>';
+  openSheet(html);
+  if (backTo !== undefined) $('sheetBack').onclick = function () { openMenu(backTo); };
+}
+
+/* =====================================================================
+   Cardápio: próxima refeição + semana
+   ===================================================================== */
+function mealNow(now) {
+  var dow = now.getDay(), ref = CARDAPIO[dow].ref, nm = now.getHours() * 60 + now.getMinutes(), i, t;
+  for (i = 0; i < ref.length; i++) {
+    t = toMin(ref[i][0]);
+    if (nm < t + 45) return { dow: dow, i: i, quando: nm >= t ? 'Agora' : 'Próxima refeição' };
+  }
+  return { dow: (dow + 1) % 7, i: 0, quando: 'Amanhã cedo' };
+}
+
+function prepHint(now) {
+  if (now.getHours() < 17) return '';
+  var t = CARDAPIO[(now.getDay() + 1) % 7].ref, i, out = [];
+  for (i = 0; i < t.length; i++) {
+    if (t[i][4] === 'oats') out.push('overnight oats');
+    if (t[i][4] === 'pudim') out.push('pudim de chia');
+  }
+  return out.length ? '🌙 Prepare hoje para amanhã: ' + out.join(' e ') : '';
+}
+
+function renderMeal() {
+  var now = new Date(), m = mealNow(now), r = CARDAPIO[m.dow].ref[m.i], html, i, hint = prepHint(now);
+  html = '<div class="meal-top"><div class="label">' + m.quando + ' · ' + hLabel(r[0]) + '</div><div class="meal-tema">' + esc(CARDAPIO[m.dow].tema) + '</div></div>';
+  html += '<h3>' + esc(r[1]) + '</h3><ul>';
+  for (i = 0; i < r[2].length; i++) html += '<li>' + esc(r[2][i]) + '</li>';
+  html += '</ul>';
+  html += hint ? '<div class="meal-foot prep">' + esc(hint) + '</div>' : '<div class="meal-foot">Toque para ver o cardápio da semana</div>';
+  $('meal').innerHTML = html;
+}
+
+var TAB_ORDER = [1, 2, 3, 4, 5, 6, 0];
+function openMenu(dow) {
+  var now = new Date(), today = now.getDay(), cur = mealNow(now), d = CARDAPIO[dow], html, i, k, r, isNow;
+  html = '<div class="sheet-top"><h2>Cardápio de ' + DIAS[dow] + '</h2><p>' + esc(d.tema) + ' · Plano alimentar da Carine</p>' +
+    '<div class="close tap" id="sheetClose">✕</div><div class="tabs">';
+  for (i = 0; i < TAB_ORDER.length; i++) {
+    k = TAB_ORDER[i];
+    html += '<div class="tap' + (k === dow ? ' sel' : '') + (k === today ? ' hoje' : '') + '" data-d="' + k + '">' + DIAS_CURTOS[k] + '</div>';
+  }
+  html += '</div></div><div class="sheet-body" id="menuBody">';
+  for (i = 0; i < d.ref.length; i++) {
+    r = d.ref[i];
+    isNow = cur.dow === dow && cur.i === i;
+    html += '<div class="mrow' + (isNow ? ' now' : '') + '"><div class="h">' + hLabel(r[0]) + '<small>' + esc(r[1]) + '</small></div><div class="b">';
+    for (k = 0; k < r[2].length; k++) html += '<div class="it">' + esc(r[2][k]) + '</div>';
+    html += '<div class="tags">';
+    for (k = 0; k < r[3].length; k++) html += '<span>' + esc(r[3][k]) + '</span>';
+    html += '</div>';
+    if (r[4]) html += '<div class="rbtn tap" data-r="' + r[4] + '">Ver receita</div>';
+    html += '</div></div>';
+  }
+  html += '</div>';
+  openSheet(html);
+
+  var tabs = $('sheet').getElementsByClassName('tabs')[0].childNodes;
+  for (i = 0; i < tabs.length; i++) {
+    tabs[i].onclick = (function (dd) { return function () { openMenu(dd); }; })(parseInt(tabs[i].getAttribute('data-d'), 10));
+  }
+  var rb = $('menuBody').getElementsByClassName('rbtn');
+  for (i = 0; i < rb.length; i++) {
+    rb[i].onclick = (function (rid) { return function () { openRecipe(rid, dow, dow); }; })(rb[i].getAttribute('data-r'));
+  }
+}
+
+/* =====================================================================
+   Remédios
+   ===================================================================== */
+var undoArmed = {};
+
+function getTaken(key) {
+  var raw = lsGet('cozinha-meds-' + key);
+  if (!raw) return {};
+  try { return JSON.parse(raw) || {}; } catch (e) { return {}; }
+}
+function setTaken(key, obj) { lsSet('cozinha-meds-' + key, JSON.stringify(obj)); }
+
+function isActive(med, d) {
+  if (med.alternado) {
+    var a = med.alternado.split('-');
+    var diff = Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(+a[0], +a[1] - 1, +a[2])) / 86400000);
+    return ((diff % 2) + 2) % 2 === 0;
+  }
+  if (med.dias) return med.dias.indexOf(d.getDay()) >= 0;
+  return true;
+}
+
+function currentPeriodIndex(now) {
+  var h = now.getHours(), idx = 0, i;
+  for (i = 0; i < PERIODOS.length; i++) if (h >= PERIODOS[i].inicio) idx = i;
+  return idx;
+}
+
+function makeToggle(id) {
+  return function () {
+    unlockAudio();
+    var key = dayKey(new Date()), taken = getTaken(key);
+    if (taken[id]) {
+      if (undoArmed[id]) { delete taken[id]; delete undoArmed[id]; }
+      else {
+        undoArmed[id] = true;
+        setTimeout(function () { if (undoArmed[id]) { delete undoArmed[id]; renderMeds(); } }, 3500);
+      }
+    } else {
+      taken[id] = hhmm(new Date());
+    }
+    setTaken(key, taken);
+    renderMeds();
+  };
+}
+
+function makeMarkAll(periodId) {
+  return function () {
+    unlockAudio();
+    var now = new Date(), key = dayKey(now), taken = getTaken(key), i, med, t = hhmm(now);
+    for (i = 0; i < REMEDIOS.length; i++) {
+      med = REMEDIOS[i];
+      if (med.periodo === periodId && isActive(med, now) && !taken[med.id]) taken[med.id] = t;
+    }
+    setTaken(key, taken);
+    renderMeds();
+  };
+}
+
+function renderMeds() {
+  var now = new Date(), key = dayKey(now), taken = getTaken(key);
+  var cur = currentPeriodIndex(now), wrap = $('slots'), total = 0, done = 0;
+  var p, m, col, list, el, pend, badge, med, status, cls, btn;
+  wrap.innerHTML = '';
+
+  for (p = 0; p < PERIODOS.length; p++) {
+    col = document.createElement('div');
+    list = document.createElement('div');
+    pend = 0;
+
+    for (m = 0; m < REMEDIOS.length; m++) {
+      med = REMEDIOS[m];
+      if (med.periodo !== PERIODOS[p].id) continue;
+      el = document.createElement('div');
+      if (!isActive(med, now)) {
+        el.className = 'pill off';
+        status = med.alternado ? 'Hoje não · amanhã sim' : 'Hoje não';
+      } else {
+        total++;
+        if (taken[med.id]) {
+          done++;
+          cls = undoArmed[med.id] ? 'pill tap taken armed' : 'pill tap taken';
+          status = undoArmed[med.id] ? 'Toque de novo p/ desmarcar' : 'Tomado às ' + taken[med.id];
+        } else {
+          pend++;
+          cls = 'pill tap';
+          status = med.dose;
+        }
+        el.className = cls;
+        el.onclick = makeToggle(med.id);
+      }
+      el.innerHTML = '<div class="chk">✓</div><div class="txt"><div class="pn">' + esc(med.nome) + '</div><div class="pd">' + esc(status) + '</div></div>';
+      list.appendChild(el);
+    }
+
+    if (pend >= 2) {
+      btn = document.createElement('div');
+      btn.className = 'all-btn tap';
+      btn.innerHTML = 'Tomei todos';
+      btn.onclick = makeMarkAll(PERIODOS[p].id);
+      list.appendChild(btn);
+    }
+
+    col.className = 'slot';
+    badge = '';
+    if (p === cur) { col.className += ' current'; badge = '<span class="badge">AGORA</span>'; }
+    if (p < cur && pend > 0) { col.className += ' late'; badge = '<span class="badge">FALTA</span>'; }
+    if (pend === 0 && p <= cur) badge = '<span class="badge">✓</span>';
+
+    col.innerHTML = '<div class="slot-head"><span class="i">' + PERIODOS[p].icone + '</span><span class="n">' + PERIODOS[p].nome + '</span>' + badge + '</div>';
+    col.appendChild(list);
+    wrap.appendChild(col);
+  }
+
+  $('medsSummary').innerHTML = (done === total && total > 0) ? 'Tudo tomado hoje ✓' : done + ' de ' + total + ' tomados hoje';
+  $('progBar').style.width = (total ? Math.round(done / total * 100) : 0) + '%';
+}
+
+function openHistory() {
+  var days = [], i, j, d, html, med, taken, cell, today = dayKey(new Date());
+  for (i = 6; i >= 0; i--) { d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
+  html = '<div class="sheet-top" style="background:#134a6b"><h2>Últimos 7 dias</h2><p>Horário em que cada item foi marcado</p><div class="close tap" id="sheetClose">✕</div></div>';
+  html += '<div class="sheet-body"><table class="hist"><tr><th class="l"></th>';
+  for (j = 0; j < days.length; j++) html += '<th' + (dayKey(days[j]) === today ? ' class="today"' : '') + '>' + DIAS_CURTOS[days[j].getDay()] + '<br>' + pad(days[j].getDate()) + '</th>';
+  html += '</tr>';
+  for (i = 0; i < REMEDIOS.length; i++) {
+    med = REMEDIOS[i];
+    html += '<tr><td class="l">' + esc(med.nome) + ' <small>· ' + PERIODOS[periodIdx(med.periodo)].nome + '</small></td>';
+    for (j = 0; j < days.length; j++) {
+      taken = getTaken(dayKey(days[j]));
+      if (!isActive(med, days[j])) cell = '<span class="x">–</span>';
+      else if (taken[med.id]) cell = '<span class="y">' + taken[med.id] + '</span>';
+      else cell = '<span class="n">○</span>';
+      html += '<td>' + cell + '</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</table></div>';
+  openSheet(html);
+}
+function periodIdx(id) { var i; for (i = 0; i < PERIODOS.length; i++) if (PERIODOS[i].id === id) return i; return 0; }
+
+function cleanupOldDays() {
+  try {
+    var limit = new Date(); limit.setDate(limit.getDate() - 30);
+    var lk = 'cozinha-meds-' + dayKey(limit), i, k, toDel = [];
+    for (i = 0; i < window.localStorage.length; i++) {
+      k = window.localStorage.key(i);
+      if (k && k.indexOf('cozinha-meds-') === 0 && k < lk) toDel.push(k);
+    }
+    for (i = 0; i < toDel.length; i++) window.localStorage.removeItem(toDel[i]);
+  } catch (e) {}
+}
+
+/* =====================================================================
+   Tempo (Open-Meteo, sem chave)
+   ===================================================================== */
+function wInfo(code, night) {
+  if (code === 0) return night ? ['🌙', 'Céu limpo'] : ['☀️', 'Ensolarado'];
+  if (code === 1) return night ? ['🌙', 'Poucas nuvens'] : ['🌤', 'Poucas nuvens'];
+  if (code === 2) return night ? ['☁️', 'Parcialmente nublado'] : ['⛅', 'Parcialmente nublado'];
+  if (code === 3) return ['☁️', 'Nublado'];
+  if (code === 45 || code === 48) return ['🌫', 'Neblina'];
+  if (code >= 51 && code <= 57) return ['🌦', 'Garoa'];
+  if (code >= 61 && code <= 67) return ['🌧', 'Chuva'];
+  if (code >= 80 && code <= 82) return ['🌦', 'Pancadas de chuva'];
+  if (code >= 95) return ['⛈', 'Trovoadas'];
+  return ['🌡', '—'];
+}
+
+function xhrGet(url, ok, fail) {
+  var x = new XMLHttpRequest(), finished = false;
+  function f() { if (!finished) { finished = true; fail(); } }
+  x.open('GET', url, true);
+  x.timeout = 15000;
+  x.onreadystatechange = function () {
+    if (x.readyState !== 4 || finished) return;
+    if (x.status === 200) {
+      try { var d = JSON.parse(x.responseText); finished = true; ok(d); } catch (e) { f(); }
+    } else { f(); }
+  };
+  x.ontimeout = f;
+  try { x.send(); } catch (e) { f(); }
+}
+
+function loadWeather() {
+  var q = '://api.open-meteo.com/v1/forecast?latitude=' + CONFIG.lat + '&longitude=' + CONFIG.lon +
+    '&current=temperature_2m,weather_code,is_day' +
+    '&hourly=temperature_2m,weather_code,precipitation_probability' +
+    '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
+    '&timezone=America%2FSao_Paulo&forecast_days=2';
+  function ok(d) {
+    d._upd = hhmm(new Date());
+    lsSet('cozinha-weather', JSON.stringify(d));
+    renderWeather(d);
+  }
+  function fail() {
+    var cached = lsGet('cozinha-weather');
+    if (cached) { try { renderWeather(JSON.parse(cached)); return; } catch (e) {} }
+    $('weather').innerHTML = '<div class="label">Tempo</div><div class="w-desc" style="margin-top:20px">Previsão indisponível.<br>Verifique o Wi-Fi.</div>';
+  }
+  xhrGet('https' + q, ok, function () {
+    if (location.protocol === 'http:') xhrGet('http' + q, ok, fail); else fail();
+  });
+}
+
+function renderWeather(d) {
+  var c = d.current, now = new Date(), night = c.is_day === 0, info = wInfo(c.weather_code, night);
+  var t = Math.round(c.temperature_2m), dl = d.daily, html = '', i, j, hr, hi, idx = -1;
+  var nowStr = dayKey(now) + 'T' + pad(now.getHours()) + ':00';
+  for (i = 0; i < d.hourly.time.length; i++) if (d.hourly.time[i] === nowStr) { idx = i; break; }
+
+  html += '<div class="label">' + esc(CONFIG.cidade) + '</div><div class="w-upd">' + (d._upd ? 'atualizado ' + d._upd : '') + '</div>';
+  html += '<div class="w-main"><div class="w-ico">' + info[0] + '</div><div class="w-temp">' + t + '°</div></div>';
+  html += '<div class="w-desc">' + info[1] + '</div>';
+  html += '<div class="w-mm">Máx ' + Math.round(dl.temperature_2m_max[0]) + '° · Mín ' + Math.round(dl.temperature_2m_min[0]) + '° · Chuva ' + dl.precipitation_probability_max[0] + '%</div>';
+  if (idx >= 0) {
+    html += '<div class="w-hours">';
+    for (i = 1; i <= 4; i++) {
+      j = idx + i * 3;
+      if (j >= d.hourly.time.length) break;
+      hr = parseInt(d.hourly.time[j].substr(11, 2), 10);
+      hi = wInfo(d.hourly.weather_code[j], hr < 6 || hr >= 18);
+      html += '<div class="w-h"><div>' + pad(hr) + 'h</div><div class="e">' + hi[0] + '</div><div>' + Math.round(d.hourly.temperature_2m[j]) + '°</div>' +
+        '<div class="p">' + d.hourly.precipitation_probability[j] + '%</div></div>';
+    }
+    html += '</div>';
+  }
+  $('weather').className = 'card weather' + (night ? ' night' : '');
+  $('weather').innerHTML = html;
+  $('miniWeather').innerHTML = info[0] + ' ' + t + '°';
+}
+
+/* =====================================================================
+   Som
+   ===================================================================== */
+var actx = null;
+function unlockAudio() {
+  try {
+    if (!actx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      actx = new AC();
+      var b = actx.createBuffer(1, 1, 22050), s = actx.createBufferSource();
+      s.buffer = b; s.connect(actx.destination);
+      if (s.start) s.start(0); else s.noteOn(0);
+    }
+    if (actx.resume && actx.state === 'suspended') actx.resume();
+  } catch (e) {}
+}
+function beep(at, freq) {
+  try {
+    var o = actx.createOscillator();
+    var g = actx.createGain ? actx.createGain() : actx.createGainNode();
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(0.7, at + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + 0.35);
+    o.connect(g); g.connect(actx.destination);
+    if (o.start) { o.start(at); o.stop(at + 0.4); } else { o.noteOn(at); o.noteOff(at + 0.4); }
+  } catch (e) {}
+}
+var alarmLoop = null, alarmStop = null;
+function fireAlarm() {
+  $('alarm').className = 'alarm tap';
+  function ring() {
+    if (!actx) return;
+    var t = actx.currentTime + 0.05;
+    beep(t, 880); beep(t + 0.45, 880); beep(t + 0.9, 1175);
+  }
+  ring();
+  alarmLoop = setInterval(ring, 1800);
+  alarmStop = setTimeout(stopAlarm, 120000);
+}
+function stopAlarm() {
+  if (alarmLoop) clearInterval(alarmLoop);
+  if (alarmStop) clearTimeout(alarmStop);
+  alarmLoop = alarmStop = null;
+  $('alarm').className = 'alarm hidden tap';
+}
+
+/* =====================================================================
+   Timer
+   ===================================================================== */
+var PRESETS = [1, 3, 5, 10, 15, 20, 30, 60];
+var T = { state: 'idle', end: 0, left: 0, total: 0 };
+function fmtLeft(ms) {
+  var s = Math.max(0, Math.ceil(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+  return h > 0 ? h + ':' + pad(m) + ':' + pad(ss) : pad(m) + ':' + pad(ss);
+}
+function presetLabel(m) { return m >= 60 ? (m / 60) + ' h' : m + ' min'; }
+function renderTimer() {
+  var box = $('timerCard'), html, i, btns;
+  if (T.state === 'idle') {
+    html = '<div class="label">⏱ Timer</div><div class="t-grid">';
+    for (i = 0; i < PRESETS.length; i++) html += '<div class="t-btn tap" data-min="' + PRESETS[i] + '"><div>' + presetLabel(PRESETS[i]) + '</div></div>';
+    html += '</div>';
+    box.className = 'card timer';
+    box.innerHTML = html;
+    btns = box.getElementsByClassName('t-btn');
+    for (i = 0; i < btns.length; i++) {
+      btns[i].onclick = (function (min) { return function () { startTimer(min); }; })(parseInt(btns[i].getAttribute('data-min'), 10));
+    }
+  } else {
+    html = '<div class="label">⏱ Timer</div><div class="t-run"><div id="tLeft"></div>' +
+      '<div class="t-sub" id="tSub"></div><div class="t-bar"><div id="tBar"></div></div>' +
+      '<div class="t-acts"><div class="t-act tap" id="tPlus">+1 min</div>' +
+      '<div class="t-act tap" id="tPause">' + (T.state === 'run' ? 'Pausar' : 'Continuar') + '</div>' +
+      '<div class="t-act stop tap" id="tCancel">Cancelar</div></div></div>';
+    box.className = 'card timer' + (T.state === 'pause' ? ' paused' : '');
+    box.innerHTML = html;
+    $('tPlus').onclick = plusMinute;
+    $('tPause').onclick = togglePause;
+    $('tCancel').onclick = cancelTimer;
+    updateTimerText();
+  }
+}
+function updateTimerText() {
+  if (T.state === 'idle' || !$('tLeft')) return;
+  var left = T.state === 'run' ? T.end - Date.now() : T.left;
+  $('tLeft').innerHTML = fmtLeft(left);
+  $('tSub').innerHTML = (T.state === 'pause' ? 'Pausado · ' : '') + 'de ' + fmtLeft(T.total);
+  $('tBar').style.width = Math.max(0, Math.min(100, left / T.total * 100)) + '%';
+}
+function startTimer(min) { unlockAudio(); T.total = min * 60000; T.end = Date.now() + T.total; T.state = 'run'; renderTimer(); }
+function plusMinute() { if (T.state === 'run') T.end += 60000; else T.left += 60000; T.total += 60000; updateTimerText(); }
+function togglePause() {
+  if (T.state === 'run') { T.left = T.end - Date.now(); T.state = 'pause'; }
+  else { T.end = Date.now() + T.left; T.state = 'run'; }
+  renderTimer();
+}
+function cancelTimer() { T.state = 'idle'; renderTimer(); }
+function timerTick() {
+  if (T.state !== 'run') return;
+  if (T.end - Date.now() <= 0) { T.state = 'idle'; renderTimer(); fireAlarm(); }
+  else updateTimerText();
+}
+
+/* =====================================================================
+   Loop principal
+   ===================================================================== */
+var lastMinute = -1, lastDay = '';
+function tick() {
+  var now = new Date(), dk;
+  if (now.getMinutes() !== lastMinute) {
+    lastMinute = now.getMinutes();
+    updateClock(now);
+    dk = dayKey(now);
+    if (dk !== lastDay) {
+      if (lastDay) { buildSlides(); }
+      lastDay = dk; undoArmed = {}; cleanupOldDays();
+    }
+    renderMeds();
+    renderMeal();
+    if (now.getHours() === 3 && now.getMinutes() === 30 && T.state === 'idle') location.reload();
+  }
+  timerTick();
+}
+
+function fitHeight() { $('app').style.height = window.innerHeight + 'px'; }
+
+function init() {
+  fitHeight();
+  window.addEventListener('resize', fitHeight, false);
+  window.addEventListener('orientationchange', function () { setTimeout(fitHeight, 300); }, false);
+  document.addEventListener('touchend', unlockAudio, false);
+
+  buildSlides();
+  slideTimer = setInterval(function () { if (!modalOpen) showSlide(slideIdx + 1); }, CONFIG.segundosPorReceita * 1000);
+  $('hero').onclick = function () { openRecipe(slideList[slideIdx].id, new Date().getDay()); };
+  $('meal').onclick = function () { openMenu(new Date().getDay()); };
+  $('histLink').onclick = openHistory;
+  $('modal').onclick = function (e) { if (e.target === $('modal')) closeSheet(); };
+  $('alarm').onclick = stopAlarm;
+
+  renderTimer();
+  tick();
+  setInterval(tick, 500);
+
+  var cached = lsGet('cozinha-weather');
+  if (cached) { try { renderWeather(JSON.parse(cached)); } catch (e) {} }
+  loadWeather();
+  setInterval(loadWeather, CONFIG.atualizarTempoMinutos * 60000);
+}
+
+init();
+</script>
+</body>
+</html>
