@@ -29,6 +29,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html _site/
+          echo "{\"v\":\"${{ github.sha }}\"}" > _site/version.json
           curl -sf --retry 3 "https://api.open-meteo.com/v1/forecast?latitude=-22.95&longitude=-43.18&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,weather_code,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FSao_Paulo&forecast_days=3" -o _site/weather.json || echo "Previsão indisponível agora"
 
       - uses: actions/configure-pages@v5
