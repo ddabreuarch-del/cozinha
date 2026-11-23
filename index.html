@@ -260,26 +260,27 @@ var PERIODOS = [
   { id: 'noite',  nome: 'Dormir', icone: '🌙', inicio: 21 }
 ];
 
-/* inicio: 'AAAA-MM-DD' (dia 1 do tratamento) · fim: data prevista de término · aprox: true se a data de início for aproximada */
+/* inicio: 'AAAA-MM-DD' (dia 1 do tratamento) · fim: data prevista de término · aprox: true se a data de início for aproximada
+   pausa: { de: primeiro dia sem tomar, volta: data prevista de retorno } */
 /* Remédios e suplementos, na ordem em que aparecem em cada período.
    dias: [0..6] (0 = domingo)  ·  alternado: 'AAAA-MM-DD' = uma data em que você TOMOU (conta dia sim, dia não a partir dela) */
 var REMEDIOS = [
-  { id: 'f1-manha',     periodo: 'manha',  nome: 'Inositol + NAC',  dose: 'Sachê em jejum', inicio: '2026-11-16', fim: '2026-12-15' },
+  { id: 'f1-manha',     periodo: 'manha',  nome: 'Inositol + NAC',  dose: 'Sachê em jejum', inicio: '2026-11-13', fim: '2026-12-12' },
   { id: 'lisina-manha', periodo: 'manha',  nome: 'L-lisina',        dose: '12 em 12 h' },
-  { id: 'dry',          periodo: 'manha',  nome: 'Dry',             dose: '½ comprimido' },
+  { id: 'dry',          periodo: 'manha',  nome: 'Dry',             dose: '½ comprimido', inicio: '2026-10-21' },
   { id: 'indux',        periodo: 'manha',  nome: 'Indux',           dose: '½ comprimido', alternado: '2026-11-13', inicio: '2026-10-01', aprox: true },
-  { id: 'f2',           periodo: 'manha',  nome: 'CoQ10 + B12',     dose: '2 cáps no café', inicio: '2026-11-16', fim: '2026-12-15' },
+  { id: 'f2',           periodo: 'manha',  nome: 'CoQ10 + B12',     dose: '2 cáps no café', inicio: '2026-11-13', fim: '2026-12-12' },
 
-  { id: 'enz-almoco',   periodo: 'almoco', nome: 'Enzimas',         dose: 'Início do almoço', inicio: '2026-11-16', fim: '2026-12-15' },
-  { id: 'roacutan',     periodo: 'almoco', nome: 'Roacutan',        dose: 'Com o almoço', inicio: '2026-10-21' },
+  { id: 'enz-almoco',   periodo: 'almoco', nome: 'Enzimas',         dose: 'Início do almoço', inicio: '2026-11-13', fim: '2026-12-12' },
+  { id: 'roacutan',     periodo: 'almoco', nome: 'Roacutan',        dose: 'Com o almoço', inicio: '2026-10-21', pausa: { de: '2026-11-22', volta: '2027-02-21' } },
   { id: 'aciclovir',    periodo: 'almoco', nome: 'Aciclovir',       dose: '1x ao dia' },
-  { id: 'f3',           periodo: 'almoco', nome: 'Vitamina D + K2', dose: '1 cápsula', inicio: '2026-11-16', fim: '2026-12-15' },
+  { id: 'f3',           periodo: 'almoco', nome: 'Vitamina D + K2', dose: '1 cápsula', inicio: '2026-11-13', fim: '2026-12-12' },
 
-  { id: 'enz-jantar',   periodo: 'jantar', nome: 'Enzimas',         dose: 'Início do jantar', inicio: '2026-11-16', fim: '2026-12-15' },
+  { id: 'enz-jantar',   periodo: 'jantar', nome: 'Enzimas',         dose: 'Início do jantar', inicio: '2026-11-13', fim: '2026-12-12' },
   { id: 'lisina-noite', periodo: 'jantar', nome: 'L-lisina',        dose: '12 em 12 h' },
 
-  { id: 'f1-noite',     periodo: 'noite',  nome: 'Inositol + NAC',  dose: 'Sachê na água', inicio: '2026-11-16', fim: '2026-12-15' },
-  { id: 'minoxidil',    periodo: 'noite',  nome: 'Minoxidil',       dose: 'Antes de dormir' }
+  { id: 'f1-noite',     periodo: 'noite',  nome: 'Inositol + NAC',  dose: 'Sachê na água', inicio: '2026-11-13', fim: '2026-12-12' },
+  { id: 'minoxidil',    periodo: 'noite',  nome: 'Minoxidil',       dose: 'Antes de dormir', inicio: '2026-10-01', aprox: true }
 ];
 
 /* =====================================================================
@@ -601,8 +602,14 @@ function setTaken(key, obj) { lsSet('cozinha-meds-' + key, JSON.stringify(obj));
 function parseDay(s) { var a = s.split('-'); return Date.UTC(+a[0], +a[1] - 1, +a[2]); }
 function todayUTC(d) { return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()); }
 function fmtData(s) { var a = s.split('-'); return a[2] + '/' + a[1]; }
+function isPaused(med, d) {
+  if (!med.pausa) return false;
+  var t = todayUTC(d);
+  return t >= parseDay(med.pausa.de) && t < parseDay(med.pausa.volta);
+}
 function treatDay(med, d) {
   if (!med.inicio) return '';
+  if (isPaused(med, d)) return Math.round((parseDay(med.pausa.de) - parseDay(med.inicio)) / 86400000) + ' dias tomados';
   var n = Math.round((todayUTC(d) - parseDay(med.inicio)) / 86400000) + 1;
   if (n < 1) return '';
   var txt = 'dia ' + (med.aprox ? '~' : '') + n;
@@ -611,6 +618,7 @@ function treatDay(med, d) {
 }
 
 function isActive(med, d) {
+  if (isPaused(med, d)) return false;
   if (med.alternado) {
     var a = med.alternado.split('-');
     var diff = Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(+a[0], +a[1] - 1, +a[2])) / 86400000);
@@ -674,7 +682,7 @@ function renderMeds() {
       el = document.createElement('div');
       if (!isActive(med, now)) {
         el.className = 'pill off';
-        status = med.alternado ? 'Hoje não · amanhã sim' : 'Hoje não';
+        status = isPaused(med, now) ? 'Pausado · volta ~' + fmtData(med.pausa.volta) : (med.alternado ? 'Hoje não · amanhã sim' : 'Hoje não');
       } else {
         total++;
         if (taken[med.id]) {
@@ -744,7 +752,7 @@ function openHistory() {
     seen[med.nome] = 1;
     t = treatDay(med, now);
     html += '<tr><td class="l">' + esc(med.nome) + '</td><td>' + (med.inicio ? (med.aprox ? '~' : '') + fmtData(med.inicio) : '<span class="n">a definir</span>') +
-      '</td><td>' + (t || '–') + '</td><td>' + (med.fim ? fmtData(med.fim) : '–') + '</td></tr>';
+      '</td><td>' + (t || '–') + '</td><td>' + (isPaused(med, now) ? 'pausa até ~' + fmtData(med.pausa.volta) : (med.fim ? fmtData(med.fim) : '–')) + '</td></tr>';
   }
   html += '</table></div>';
   openSheet(html);
