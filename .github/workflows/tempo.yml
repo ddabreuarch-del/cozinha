@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment2.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
 
@@ -39,4 +39,14 @@ jobs:
           path: _site
 
       - id: deployment
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+
+      # O serviço de artefatos do GitHub às vezes demora a registrar o pacote; espera e tenta de novo
+      - name: Aguardar antes de tentar de novo
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 45
+
+      - id: deployment2
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v5
